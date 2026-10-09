@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<title>ISBN / ISMN Barcode Generator — Οδηγός</title>
+<style>
+  :root {
+    --ink: #16181d;
+    --ink-2: #4a4f59;
+    --ink-3: #8a8f99;
+    --rule: #e3e5e9;
+    --tint: #f5f6f8;
+    --accent: #d2491b;
+    --sans: "Segoe UI Variable Text", "Segoe UI", Arial, sans-serif;
+    --display: "Segoe UI Variable Display", "Segoe UI", Arial, sans-serif;
+    --mono: "Cascadia Mono", Consolas, monospace;
+  }
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: var(--sans); color: var(--ink); background: #fff; font-size: 9.6pt; line-height: 1.55; }
+
+  .page {
+    width: 210mm; height: 297mm; position: relative; overflow: hidden;
+    padding: 22mm 20mm 24mm 46mm; page-break-after: always;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  /* running elements */
+  .folio {
+    position: absolute; left: 46mm; right: 20mm; bottom: 12mm;
+    display: flex; justify-content: space-between;
+    font-size: 7.4pt; color: var(--ink-3); letter-spacing: .04em;
+    border-top: .5pt solid var(--rule); padding-top: 3mm;
+  }
+  .folio b { color: var(--ink); font-weight: 600; }
+
+  /* section system: number hangs in the left margin */
+  section { position: relative; margin-bottom: 9mm; }
+  .num {
+    position: absolute; left: -26mm; top: 1.2mm; width: 18mm;
+    font-family: var(--display); font-size: 8pt; font-weight: 600;
+    color: var(--accent); letter-spacing: .08em;
+    border-top: 1.4pt solid var(--accent); padding-top: 1.6mm;
+  }
+  h2 {
+    font-family: var(--display); font-weight: 600; font-size: 17pt;
+    line-height: 1.15; letter-spacing: -.01em; margin-bottom: 4mm;
+  }
+  h3 { font-size: 9.6pt; font-weight: 600; margin: 5mm 0 1.5mm; }
+  p { margin-bottom: 2.6mm; max-width: 132mm; }
+  .lead { font-size: 11.2pt; line-height: 1.5; color: var(--ink-2); max-width: 130mm; }
+  .muted { color: var(--ink-2); }
+  code, .path {
+    font-family: var(--mono); font-size: 8.2pt;
+    background: var(--tint); border-radius: 1mm; padding: .3mm 1.2mm;
+  }
+  .path { display: block; padding: 2.6mm 3.2mm; margin: 1.5mm 0 3mm; word-break: break-all; border-left: 1.4pt solid var(--ink); border-radius: 0; }
+  .kbd { font-weight: 600; white-space: nowrap; }
+
+  /* feature list */
+  .features { display: grid; grid-template-columns: 1fr 1fr; gap: 4.5mm 8mm; margin-top: 5mm; }
+  .feature { border-top: .5pt solid var(--rule); padding-top: 2.6mm; }
+  .feature b { display: block; font-weight: 600; margin-bottom: .8mm; }
+  .feature span { color: var(--ink-2); font-size: 9pt; }
+
+  /* steps */
+  ol.steps { list-style: none; counter-reset: s; margin-top: 2mm; }
+  ol.steps li { counter-increment: s; position: relative; padding: 0 0 3.4mm 9mm; max-width: 132mm; }
+  ol.steps li::before {
+    content: counter(s); position: absolute; left: 0; top: .2mm;
+    width: 5.4mm; height: 5.4mm; border-radius: 50%;
+    background: var(--ink); color: #fff; font-size: 7.4pt; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* tables */
+  table { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin-top: 2mm; }
+  th { text-align: left; font-weight: 600; font-size: 7.4pt; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); padding: 0 3mm 2mm 0; border-bottom: .8pt solid var(--ink); }
+  td { padding: 2.3mm 3mm 2.3mm 0; border-bottom: .5pt solid var(--rule); vertical-align: top; }
+  td:first-child { font-weight: 600; width: 38%; }
+  .spec td:first-child { font-weight: 400; color: var(--ink-2); width: 42%; }
+  .spec td:last-child { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .note {
+    margin-top: 5mm; padding: 3.6mm 4.4mm; background: var(--tint);
+    border-left: 1.4pt solid var(--accent); font-size: 9pt; max-width: 140mm;
+  }
+  .note b { color: var(--ink); }
+
+  .dense section { margin-bottom: 5mm; }
+  .dense td { padding-top: 1.4mm; padding-bottom: 1.4mm; }
+  .dense h2 { margin-bottom: 3mm; }
+  .dense ol.steps li { padding-bottom: 2.4mm; }
+  .dense .note { margin-top: 3mm; }
+
+  /* cover */
+  .cover { padding: 0; background: #fff; }
+  .cover .band { position: absolute; left: 0; top: 0; bottom: 0; width: 46mm; background: var(--ink); }
+  .cover .band .v {
+    position: absolute; left: 12mm; bottom: 22mm; color: #fff;
+    font-family: var(--display); font-size: 8pt; letter-spacing: .14em; line-height: 1.9;
+  }
+  .cover .band .v span { color: var(--accent); }
+  .cover .inner { position: absolute; left: 62mm; right: 20mm; top: 34mm; }
+  .eyebrow { font-size: 8pt; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); margin-bottom: 7mm; }
+  .cover h1 {
+    font-family: var(--display); font-weight: 600; font-size: 36pt; line-height: 1.02;
+    letter-spacing: -.025em; margin-bottom: 7mm;
+  }
+  .cover h1 em { font-style: normal; color: var(--ink-3); font-weight: 300; }
+  .cover .lead { max-width: 108mm; }
+  .art { position: absolute; left: 62mm; bottom: 46mm; width: 92mm; }
+  .art .bc { width: 100%; height: auto; display: block; }
+  .art .cap { margin-top: 3mm; font-size: 7.4pt; color: var(--ink-3); letter-spacing: .04em; display: flex; justify-content: space-between; border-top: .5pt solid var(--rule); padding-top: 2mm; }
+  .crop { position: absolute; width: 5mm; height: 5mm; border-color: var(--ink-3); border-style: solid; border-width: 0; }
+  .crop.tl { left: -4mm; top: -4mm; border-left-width: .4pt; border-top-width: .4pt; }
+  .crop.br { right: -4mm; bottom: 7mm; border-right-width: .4pt; border-bottom-width: .4pt; }
+</style>
+</head>
+<body>
+
+<!-- ============ COVER ============ -->
+<div class="page cover">
+  <div class="band"><div class="v">ADOBE INDESIGN<br>EXTENDSCRIPT<br><span>v51</span> · 2026</div></div>
+  <div class="inner">
+    <div class="eyebrow">Οδηγός εγκατάστασης &amp; χρήσης</div>
+    <h1>ISBN / ISMN<br>Barcode <em>Generator</em></h1>
+    <p class="lead">Script για το Adobe InDesign που σχεδιάζει barcode EAN-13 για ISBN και ISMN απευθείας στη σελίδα, ως καθαρά διανυσματικά σχήματα, έτοιμα για εκτύπωση.</p>
+  </div>
+  <div class="art">
+    <span class="crop tl"></span><span class="crop br"></span>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 113 86" class="bc" role="img" aria-label="Barcode ISBN 9789605994839"><rect width="113" height="86" fill="#fff"/><g fill="#111"><rect x="11" y="12" width="1.02" height="65"/><rect x="13" y="12" width="1.02" height="65"/><rect x="15" y="12" width="1.02" height="60"/><rect x="16" y="12" width="1.02" height="60"/><rect x="17" y="12" width="1.02" height="60"/><rect x="19" y="12" width="1.02" height="60"/><rect x="20" y="12" width="1.02" height="60"/><rect x="24" y="12" width="1.02" height="60"/><rect x="27" y="12" width="1.02" height="60"/><rect x="30" y="12" width="1.02" height="60"/><rect x="32" y="12" width="1.02" height="60"/><rect x="33" y="12" width="1.02" height="60"/><rect x="34" y="12" width="1.02" height="60"/><rect x="36" y="12" width="1.02" height="60"/><rect x="38" y="12" width="1.02" height="60"/><rect x="39" y="12" width="1.02" height="60"/><rect x="40" y="12" width="1.02" height="60"/><rect x="41" y="12" width="1.02" height="60"/><rect x="43" y="12" width="1.02" height="60"/><rect x="46" y="12" width="1.02" height="60"/><rect x="47" y="12" width="1.02" height="60"/><rect x="48" y="12" width="1.02" height="60"/><rect x="50" y="12" width="1.02" height="60"/><rect x="51" y="12" width="1.02" height="60"/><rect x="55" y="12" width="1.02" height="60"/><rect x="57" y="12" width="1.02" height="65"/><rect x="59" y="12" width="1.02" height="65"/><rect x="61" y="12" width="1.02" height="60"/><rect x="62" y="12" width="1.02" height="60"/><rect x="63" y="12" width="1.02" height="60"/><rect x="65" y="12" width="1.02" height="60"/><rect x="68" y="12" width="1.02" height="60"/><rect x="69" y="12" width="1.02" height="60"/><rect x="70" y="12" width="1.02" height="60"/><rect x="72" y="12" width="1.02" height="60"/><rect x="75" y="12" width="1.02" height="60"/><rect x="77" y="12" width="1.02" height="60"/><rect x="78" y="12" width="1.02" height="60"/><rect x="79" y="12" width="1.02" height="60"/><rect x="82" y="12" width="1.02" height="60"/><rect x="85" y="12" width="1.02" height="60"/><rect x="89" y="12" width="1.02" height="60"/><rect x="94" y="12" width="1.02" height="60"/><rect x="96" y="12" width="1.02" height="60"/><rect x="97" y="12" width="1.02" height="60"/><rect x="98" y="12" width="1.02" height="60"/><rect x="100" y="12" width="1.02" height="60"/><rect x="103" y="12" width="1.02" height="65"/><rect x="105" y="12" width="1.02" height="65"/></g><g font-family="Arial, Helvetica, sans-serif" font-size="9" fill="#111" letter-spacing="1.6"><text x="56.5" y="8.5" text-anchor="middle" font-size="7.2">ISBN 9789605994839</text><text x="6.5" y="81.6" text-anchor="middle">9</text><text x="35" y="81.6" text-anchor="middle">789605</text><text x="82" y="81.6" text-anchor="middle">994839</text></g></svg>
+    <div class="cap"><span>ISBN-13 · EAN-13</span><span>Δείγμα εξόδου</span></div>
+  </div>
+</div>
+
+<!-- ============ PAGE 2 ============ -->
+<div class="page">
+  <section>
+    <div class="num">01</div>
+    <h2>Τι κάνει</h2>
+    <p class="lead">Δίνετε έναν κωδικό 13 ψηφίων. Το script ελέγχει ότι είναι έγκυρος και σχεδιάζει το barcode στην τρέχουσα σελίδα, μαζί με την ένδειξη από πάνω και τα ψηφία από κάτω.</p>
+    <div class="features">
+      <div class="feature"><b>ISBN-13 και ISMN-13</b><span>Βιβλία (978 / 979) και έντυπη μουσική (9790). Ο τύπος επιλέγεται αυτόματα από τα πρώτα ψηφία.</span></div>
+      <div class="feature"><b>Έλεγχος εγκυρότητας</b><span>Ελέγχει μήκος, πρόθεμα και ψηφίο ελέγχου πριν σχεδιάσει οτιδήποτε.</span></div>
+      <div class="feature"><b>Καθαρά διανύσματα</b><span>Οι μπάρες ενώνονται σε ένα σχήμα και τα κείμενα γίνονται περιγράμματα. Δεν χρειάζεται γραμματοσειρά στο τυπογραφείο.</span></div>
+      <div class="feature"><b>Ένα αντικείμενο</b><span>Μπάρες, κείμενα και λευκό φόντο ομαδοποιούνται σε ένα group, που στο Layers panel έχει όνομα τον κωδικό (π.χ. «ISBN 9789605994839»).</span></div>
+      <div class="feature"><b>Αναίρεση σε ένα βήμα</b><span>Ένα <span class="kbd">Ctrl+Z</span> (<span class="kbd">Cmd+Z</span>) σβήνει ολόκληρο το barcode.</span></div>
+      <div class="feature"><b>Σέβεται το έγγραφό σας</b><span>Μονάδες, χάρακας και σημείο μηδέν αλλάζουν προσωρινά και επανέρχονται όπως ήταν.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="num">02</div>
+    <h2>Απαιτήσεις</h2>
+    <table>
+      <tr><th>Στοιχείο</th><th>Λεπτομέρειες</th></tr>
+      <tr><td>Adobe InDesign</td><td>Έκδοση με υποστήριξη ExtendScript. Η εγκατάσταση έγινε στο InDesign <code>Version 21.0</code>.</td></tr>
+      <tr><td>Ανοιχτό έγγραφο</td><td>Το barcode μπαίνει στη σελίδα που βλέπετε εκείνη τη στιγμή.</td></tr>
+      <tr><td>Γραμματοσειρά</td><td>Ψηφία: OCR-B, η τυπική γραμματοσειρά για barcode, αν είναι εγκατεστημένη. Ένδειξη ISBN: Arial, ή Helvetica / Myriad Pro αν λείπει.</td></tr>
+      <tr><td>Κωδικός</td><td>Ο ISBN ή ISMN που σας εκχωρήθηκε, 13 ψηφία. Παύλες και κενά επιτρέπονται.</td></tr>
+    </table>
+  </section>
+
+  <div class="folio"><span><b>ISBN / ISMN Barcode Generator</b> · Οδηγός</span><span>02</span></div>
+</div>
+
+<!-- ============ PAGE 3 ============ -->
+<div class="page">
+  <section>
+    <div class="num">03</div>
+    <h2>Εγκατάσταση</h2>
+    <ol class="steps">
+      <li>Στο InDesign ανοίξτε το <span class="kbd">Window → Utilities → Scripts</span>.</li>
+      <li>Στο panel, κάντε δεξί κλικ στον φάκελο <b>User</b> και επιλέξτε <span class="kbd">Reveal in Explorer</span> (Windows) ή <span class="kbd">Reveal in Finder</span> (macOS).</li>
+      <li>Αντιγράψτε το αρχείο <code>ISBN-13 Barcode Generator for Adobe InDesign.js</code> στον φάκελο που άνοιξε.</li>
+      <li>Γυρίστε στο InDesign. Το script εμφανίζεται αμέσως κάτω από το <b>User</b>, χωρίς επανεκκίνηση.</li>
+    </ol>
+    <h3>Η διαδρομή του φακέλου, για αναφορά</h3>
+    <p class="muted">Windows</p>
+    <span class="path">%APPDATA%\Adobe\InDesign\Version 21.0\en_US\Scripts\Scripts Panel\</span>
+    <p class="muted">Ο αριθμός έκδοσης και η γλώσσα (<code>en_US</code>) διαφέρουν ανάλογα με την εγκατάστασή σας. Το βήμα 2 σας πηγαίνει πάντα στον σωστό φάκελο.</p>
+    <h3>Αναβάθμιση</h3>
+    <p>Αντικαταστήστε το παλιό αρχείο με το νέο, με το ίδιο όνομα. Η έκδοση φαίνεται στην πρώτη γραμμή του αρχείου (π.χ. <code>COMPACT v51</code>).</p>
+  </section>
+
+  <section>
+    <div class="num">04</div>
+    <h2>Χρήση</h2>
+    <ol class="steps">
+      <li>Ανοίξτε το έγγραφο και πηγαίνετε στη σελίδα όπου θα μπει το barcode, συνήθως το οπισθόφυλλο. Αν θέλετε να μπει μέσα σε ένα πλαίσιο, επιλέξτε το.</li>
+      <li>Διπλό κλικ στο script, στο Scripts panel.</li>
+      <li>Γράψτε ή επικολλήστε τον κωδικό, με ή χωρίς παύλες. Αν ξεκινά με <code>9790</code>, ο τύπος γίνεται αυτόματα <b>ISMN-13</b>. Αλλιώς μένει <b>ISBN-13</b>. Οι παύλες που γράφετε εμφανίζονται όπως είναι στην ένδειξη πάνω από τις μπάρες, π.χ. «ISBN 978-0-345-24223-5».</li>
+      <li>Ελέγξτε μέγεθος και θέση (ενότητα 05) και πατήστε <b>OK</b>. Αν κάτι δεν είναι σωστό, το μήνυμα εμφανίζεται με κόκκινο μέσα στο παράθυρο, που μένει ανοιχτό. Αν αλλάξετε τύπο με το χέρι, το πεδίο γεμίζει με κωδικό-δείγμα: βάλτε τον δικό σας.</li>
+    </ol>
+    <div class="note"><b>Παλιό ISBN-10;</b> Γράψτε το όπως είναι, π.χ. <code>0-345-24223-8</code>, και πατήστε OK. Το script το μετατρέπει σε ISBN-13 μέσα στο πεδίο, με νέο ψηφίο ελέγχου, και σας ζητά να το ελέγξετε και να πατήσετε ξανά OK.</div>
+  </section>
+
+  <div class="folio"><span><b>ISBN / ISMN Barcode Generator</b> · Οδηγός</span><span>03</span></div>
+</div>
+
+<!-- ============ PAGE 4 ============ -->
+<div class="page">
+  <section>
+    <div class="num">05</div>
+    <h2>Ρυθμίσεις του παραθύρου</h2>
+    <p class="muted">Το script θυμάται τις ρυθμίσεις από την προηγούμενη φορά, στο αρχείο <code>%APPDATA%\ISBN-Barcode\settings.txt</code>. Σβήστε το για επαναφορά. Δεκαδικά γράφονται με κόμμα ή τελεία.</p>
+    <table class="spec">
+      <tr><th>Πεδίο</th><th>Τι κάνει</th></tr>
+      <tr><td>Πλάτος μπαρών (mm)</td><td>25,08 έως 62,70 mm, δηλαδή 80–200% του ονομαστικού κατά GS1. Δίπλα φαίνεται το ποσοστό και το πάχος της λεπτής μπάρας (X).</td></tr>
+      <tr><td>Ύψος μπαρών (%)</td><td>40 έως 100% του πλήρους ύψους. Το 100% είναι 22,85 mm στο ονομαστικό μέγεθος.</td></tr>
+      <tr><td>Πρόσθετο τιμής EAN-5</td><td>Προαιρετικό, 5 ψηφία, π.χ. <code>90000</code> για «χωρίς τιμή». Μπαίνει δεξιά του barcode. Δεν το θυμάται, για να μην περάσει κατά λάθος σε άλλο βιβλίο.</td></tr>
+      <tr><td>Στη σελίδα</td><td>X και Y της πάνω αριστερής γωνίας του λευκού φόντου, από τη γωνία της σελίδας.</td></tr>
+      <tr><td>Στο κέντρο του επιλεγμένου</td><td>Το barcode κεντράρεται πάνω στο αντικείμενο που είχατε επιλέξει. Διαθέσιμο μόνο όταν είναι επιλεγμένο ένα αντικείμενο πάνω σε σελίδα.</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <div class="num">06</div>
+    <h2>Τι παίρνετε</h2>
+    <table class="spec">
+      <tr><th>Χαρακτηριστικό</th><th>Με τις προεπιλογές (v51)</th></tr>
+      <tr><td>Πλάτος μπαρών</td><td>30 mm (περίπου 96% του ονομαστικού)</td></tr>
+      <tr><td>Συνολικό πλάτος με λευκό φόντο</td><td>39,5 mm · λευκά περιθώρια 5,4 mm αριστερά, 4,1 mm δεξιά (ελάχιστα GS1: 3,5 / 2,2 mm, συν 1,9 mm αέρας)</td></tr>
+      <tr><td>Ύψος μπαρών</td><td>14,4 mm (66%) · guard bars +1,6 mm</td></tr>
+      <tr><td>Θέση</td><td>Πάνω αριστερή γωνία του λευκού φόντου στα 100 / 150 mm</td></tr>
+      <tr><td>Ψηφία</td><td>OCR-B (αν υπάρχει) · ύψος 1,7 mm</td></tr>
+      <tr><td>Χρώματα</td><td>Μπάρες: swatch Black · Φόντο: Paper</td></tr>
+    </table>
+    <p class="muted" style="margin-top:3mm">Σε άλλο μέγεθος όλα αλλάζουν αναλογικά: περιθώρια, ψηφία και αποστάσεις.</p>
+  </section>
+
+  <div class="folio"><span><b>ISBN / ISMN Barcode Generator</b> · Οδηγός</span><span>04</span></div>
+</div>
+
+<!-- ============ PAGE 5 ============ -->
+<div class="page">
+  <section>
+    <div class="num">07</div>
+    <h2>Μηνύματα σφάλματος</h2>
+    <table>
+      <tr><th>Μήνυμα</th><th>Τι να κάνετε</th></tr>
+      <tr><td>Δεν υπάρχει ανοιχτό έγγραφο</td><td>Ανοίξτε ή δημιουργήστε έγγραφο και ξανατρέξτε το script.</td></tr>
+      <tr><td>Η ενεργή στρώση είναι κλειδωμένη ή κρυφή</td><td>Ξεκλειδώστε την στρώση και κάντε την ορατή στο Layers panel, ή επιλέξτε άλλη.</td></tr>
+      <tr><td>ΣΦΑΛΜΑ FONT</td><td>Εγκαταστήστε ή ενεργοποιήστε Arial, Helvetica ή Myriad Pro.</td></tr>
+      <tr><td colspan="2" style="font-weight:600;color:var(--ink-3);font-size:7.4pt;letter-spacing:.06em;text-transform:uppercase;padding-top:4mm">Μέσα στο παράθυρο, με κόκκινο</td></tr>
+      <tr><td>Μη έγκυρο ISBN-10</td><td>Το τελευταίο ψηφίο (ή το X) δεν ταιριάζει. Ελέγξτε τον αριθμό στο παλιό βιβλίο.</td></tr>
+      <tr><td>Μη έγκυρος κωδικός</td><td>Ελέγξτε ότι έχει 13 ψηφία και ότι το τελευταίο ψηφίο ελέγχου είναι σωστό. Συνήθως φταίει ένα λάθος στην πληκτρολόγηση.</td></tr>
+      <tr><td>Πρέπει να ξεκινά με 978 / 979 ή 9790</td><td>Ο κωδικός δεν ταιριάζει με τον τύπο. Ελέγξτε τον κωδικό ή αλλάξτε τύπο.</td></tr>
+      <tr><td>Το πρόσθετο τιμής πρέπει να έχει 5 ψηφία</td><td>Γράψτε ακριβώς 5 ψηφία ή αφήστε το πεδίο κενό.</td></tr>
+      <tr><td>Πλάτος, ύψος ή X / Y εκτός ορίων</td><td>Το μήνυμα γράφει τα επιτρεπτά όρια. Διορθώστε το πεδίο και πατήστε ξανά OK.</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <div class="num">08</div>
+    <h2>Για σωστή εκτύπωση</h2>
+    <ol class="steps">
+      <li><b>Αλλάξτε μέγεθος από το παράθυρο,</b> όχι τραβώντας το group. Έτσι τα περιθώρια και τα ψηφία μένουν σωστά. Αν πρέπει να το κλιμακώσετε, μόνο αναλογικά με Shift, και όχι κάτω από 80%.</li>
+      <li><b>Μόνο μαύρο 100%.</b> Μην βάφετε τις μπάρες με τετραχρωμία ή rich black. Ένα μικρό σφάλμα σε ευθυγράμμιση θολώνει τα άκρα.</li>
+      <li><b>Κρατήστε το λευκό φόντο</b>, ειδικά πάνω σε σκούρο ή φωτογραφικό εξώφυλλο. Μην βάζετε τίποτα μέσα στα λευκά περιθώρια.</li>
+      <li><b>Δοκιμάστε στο τελικό proof</b> με σαρωτή ή εφαρμογή κινητού, και ελέγξτε ότι ο αριθμός που διαβάζεται είναι ο σωστός.</li>
+    </ol>
+    <div class="note"><b>Με πρόσθετο τιμής</b> το συνολικό πλάτος μεγαλώνει κατά περίπου 17 mm (στις προεπιλογές). Ελέγξτε ότι χωρά στο οπισθόφυλλο, και σαρώστε και το πρόσθετο: πολλές εφαρμογές κινητού διαβάζουν μόνο το κύριο barcode.</div>
+  </section>
+
+  <div class="folio"><span><b>ISBN / ISMN Barcode Generator</b> · Οδηγός</span><span>05</span></div>
+</div>
+
+</body>
+</html>
