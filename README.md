@@ -107,3 +107,7 @@ The tests use fixtures from published references: the Wikipedia EAN-13, ISBN and
 - GS1 General Specifications: EAN-13 symbol dimensions, quiet zones and add-on separation.
 - ISO/IEC 15420: EAN/UPC bar code symbology.
 - ISBN and ISMN are assigned by the national ISBN / ISMN agencies. Use the code you were given; the script validates it but cannot check that it was registered.
+
+## Copyright
+
+© 2026 George Hadji. All rights reserved.
