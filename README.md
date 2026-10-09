@@ -110,4 +110,4 @@ The tests use fixtures from published references: the Wikipedia EAN-13, ISBN and
 
 ## Copyright
 
-© 2026 George Hadji. All rights reserved.
+© 2026 Georgios-Chrysovalantis Chatzivantsidis. All rights reserved.
